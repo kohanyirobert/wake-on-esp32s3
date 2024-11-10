@@ -78,10 +78,6 @@ void setup()
             MDNS.addService("http", "tcp", HTTP_PORT);
             leds[0] = CRGB::Green;
             FastLED.show();
-            Keyboard.begin();
-            Keyboard.press(KEY_F24);
-            Keyboard.release(KEY_F24);
-            Keyboard.end();
             delay(500);
             leds[0] = CRGB::Black;
             FastLED.show();
