@@ -19,6 +19,8 @@ void loop()
 #include "pin_config.h"
 #include "wifi_setup.h"
 
+#include <TFT_eSPI.h>
+
 #define NUM_LEDS 1
 #define BAUD_RATE 9600
 #define HTTP_PORT 80
@@ -27,10 +29,16 @@ void loop()
 CRGB leds[NUM_LEDS];
 USBHIDKeyboard Keyboard;
 WebServer server(HTTP_PORT);
+TFT_eSPI tft = TFT_eSPI();
 
 void setup()
 {
     delay(5000);
+    pinMode(TFT_LEDA_PIN, OUTPUT);
+    tft.init();
+    tft.setRotation(1);
+    tft.fillScreen(TFT_GREENYELLOW);
+    digitalWrite(TFT_LEDA_PIN, 0);
     server.on("/", HTTP_POST, []() {
         Serial.begin(BAUD_RATE);
         Serial.println("got message");
