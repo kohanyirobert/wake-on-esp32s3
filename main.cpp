@@ -8,9 +8,14 @@ void loop()
 }
 #else
 
+#include <functional>
+
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <ESPmDNS.h>
 #include <FastLED.h>
+#include <OneButton.h>
+#include <TFT_eSPI.h>
 #include <USB.h>
 #include <USBHIDKeyboard.h>
 #include <WebServer.h>
@@ -31,77 +36,146 @@ void loop()
 CRGB leds[NUM_LEDS];
 USBHIDKeyboard Keyboard;
 WebServer server(HTTP_PORT);
+TFT_eSPI tft = TFT_eSPI();
+uint8_t tftRotation = 0;
+OneButton button(BTN_PIN, true);
+
+void withLed(CRGB::HTMLColorCode color, std::function<void()> fn)
+{
+    leds[0] = color;
+    FastLED.show();
+    fn();
+    delay(WAIT_SMALL);
+    leds[0] = CRGB::Black;
+    FastLED.show();
+}
+
+void withSerial(std::function<void()> fn)
+{
+    Serial.begin(BAUD_RATE);
+    fn();
+    Serial.end();
+}
+
+template <typename T> void xPrint(const T &s)
+{
+    Serial.print(s);
+    tft.print(s);
+}
+
+template <typename T> void xPrintln(const T &s)
+{
+    Serial.println(s);
+    tft.println(s);
+}
+
+void confTft()
+{
+    tft.setCursor(0, 0, 2);
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextSize(1);
+}
+
+void rotateTft()
+{
+    tftRotation = (tft.getRotation() + 1) % 4;
+    withLed(CRGB::Pink, []() {
+        EEPROM.write(0, tftRotation);
+        EEPROM.commit();
+    });
+    tft.setRotation(tftRotation);
+    confTft();
+}
 
 void setup()
 {
     delay(WAIT_HUGE);
-    server.on("/", HTTP_POST, []() {
-        leds[0] = CRGB::Blue;
-        FastLED.show();
-        Serial.begin(BAUD_RATE);
-        Serial.println("got message");
-        Serial.end();
-        server.send(200);
-        Keyboard.begin();
-        Keyboard.press(KEY_F24);
-        Keyboard.release(KEY_F24);
-        Keyboard.end();
-        delay(WAIT_SMALL);
-        leds[0] = CRGB::Black;
-        FastLED.show();
+    withSerial([]() {
+        xPrint("c++? ");
+        xPrintln(__cplusplus);
     });
+    server.on("/", HTTP_POST, []() {
+        withLed(CRGB::Blue, []() {
+            withSerial([]() { xPrintln("got message"); });
+            server.send(200);
+            Keyboard.begin();
+            Keyboard.press(KEY_F24);
+            Keyboard.release(KEY_F24);
+            Keyboard.end();
+        });
+    });
+    button.attachDuringLongPress([] {
+        withLed(CRGB::Purple, []() {
+            withSerial([]() {
+                xPrintln("button long pressed");
+                xPrintln("restarting esp");
+                delay(WAIT_HUGE);
+                ESP.restart();
+            });
+            server.send(200);
+        });
+    });
+    button.attachClick([] {
+        withLed(CRGB::Yellow, []() {
+            withSerial([]() {
+                xPrintln("button clicked");
+                xPrintln("rotating tft");
+                delay(WAIT_HUGE);
+                rotateTft();
+                xPrintln("rotated tft");
+            });
+        });
+    });
+    withLed(CRGB::Pink, []() {
+        EEPROM.begin(sizeof(uint8_t));
+        tftRotation = EEPROM.read(0);
+    });
+    tft.init();
+    tft.setRotation(tftRotation);
+    confTft();
     USB.begin();
     FastLED.clear();
     FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, NUM_LEDS);
-    Serial.begin(BAUD_RATE);
-    Serial.print("connecting to ");
-    Serial.println(WIFI_SSID);
-    Serial.end();
+    withSerial([]() {
+        xPrint("connecting to ");
+        xPrintln(WIFI_SSID);
+    });
     WiFi.disconnect(true);
     delay(WAIT_NORMAL);
     WiFi.onEvent([](WiFiEvent_t event) {
         switch (event)
         {
         case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-            leds[0] = CRGB::Green;
-            FastLED.show();
-            Serial.begin(BAUD_RATE);
-            Serial.print("connected at ");
-            Serial.println(WiFi.localIP());
-            Serial.end();
-            server.begin();
-            if (MDNS.begin(DOMAIN_NAME))
-            {
-                Serial.begin(BAUD_RATE);
-                Serial.println("set up mDNS");
-                Serial.end();
-            }
-            else
-            {
-                Serial.begin(BAUD_RATE);
-                Serial.println("couldn't set up mDNS");
-                Serial.end();
-            }
-            MDNS.addService("http", "tcp", HTTP_PORT);
-            delay(WAIT_SMALL);
-            leds[0] = CRGB::Black;
-            FastLED.show();
+            withLed(CRGB::Green, []() {
+                withSerial([]() {
+                    xPrint("connected at ");
+                    xPrintln(WiFi.localIP());
+                    server.begin();
+                    if (MDNS.begin(DOMAIN_NAME))
+                    {
+                        xPrintln("set up mDNS");
+                    }
+                    else
+                    {
+                        xPrintln("couldn't set up mDNS");
+                    }
+                });
+                MDNS.addService("http", "tcp", HTTP_PORT);
+            });
             delay(WAIT_NORMAL);
             break;
         case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
             MDNS.end();
-            leds[0] = CRGB::Red;
-            FastLED.show();
-            Serial.begin(BAUD_RATE);
-            Serial.print("disconnected, reconnecting to ");
-            Serial.println(WIFI_SSID);
-            Serial.end();
-            WiFi.disconnect(true);
-            delay(WAIT_NORMAL);
-            WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-            delay(WAIT_SMALL);
-            leds[0] = CRGB::Black;
-            FastLED.show();
+            withLed(CRGB::Red, []() {
+                withSerial([]() {
+                    xPrint("disconnected, reconnecting to ");
+                    xPrintln(WIFI_SSID);
+                });
+                WiFi.disconnect(true);
+                delay(WAIT_NORMAL);
+                WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+            });
             delay(WAIT_NORMAL);
             break;
         default:
@@ -113,6 +187,7 @@ void setup()
 
 void loop()
 {
+    button.tick();
     server.handleClient();
     delay(WAIT_TINY);
 }
