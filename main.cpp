@@ -115,10 +115,10 @@ void setup()
             });
         });
     });
-    button.attachClick([] {
+    button.attachDoubleClick([] {
         withLed(CRGB::Yellow, []() {
             withSerial([]() {
-                xPrintln("button clicked");
+                xPrintln("button double clicked");
                 xPrintln("rotating tft");
                 delay(WAIT_HUGE);
                 rotateTft();
