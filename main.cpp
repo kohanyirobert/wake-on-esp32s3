@@ -69,8 +69,9 @@ template <typename T> void xPrintln(const T &s)
     tft.println(s);
 }
 
-void confTft()
+void configureTft()
 {
+    tft.setRotation(tftRotation);
     tft.setCursor(0, 0, 2);
     tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -84,26 +85,25 @@ void rotateTft()
         EEPROM.write(0, tftRotation);
         EEPROM.commit();
     });
-    tft.setRotation(tftRotation);
-    confTft();
+    configureTft();
 }
 
 void setup()
 {
     delay(WAIT_HUGE);
     withSerial([]() {
-        xPrint("c++? ");
+        xPrint("c++: ");
         xPrintln(__cplusplus);
     });
-    server.on("/", HTTP_POST, []() {
+    server.on("/", HTTP_GET, []() {
         withLed(CRGB::Blue, []() {
             withSerial([]() { xPrintln("got message"); });
-            server.send(200);
             Keyboard.begin();
             Keyboard.press(KEY_F24);
             Keyboard.release(KEY_F24);
             Keyboard.end();
         });
+        server.send(200);
     });
     button.attachDuringLongPress([] {
         withLed(CRGB::Purple, []() {
@@ -113,8 +113,8 @@ void setup()
                 delay(WAIT_HUGE);
                 ESP.restart();
             });
-            server.send(200);
         });
+        server.send(200);
     });
     button.attachClick([] {
         withLed(CRGB::Yellow, []() {
@@ -133,7 +133,7 @@ void setup()
     });
     tft.init();
     tft.setRotation(tftRotation);
-    confTft();
+    configureTft();
     USB.begin();
     FastLED.clear();
     FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, NUM_LEDS);
