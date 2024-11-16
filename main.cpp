@@ -114,7 +114,6 @@ void setup()
                 ESP.restart();
             });
         });
-        server.send(200);
     });
     button.attachClick([] {
         withLed(CRGB::Yellow, []() {
