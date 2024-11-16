@@ -9,3 +9,8 @@ Used to wake up a laptop which doesn't respond to Wake-on-LAN and out of reach b
 - Copy `wifi_setup.h.sample` to `wifi_setup.h` and configure SSID and password in the header file before building
 - To upload plug the device into a USB port *while holding the button on it*
 - To run the code replug it without holding the button
+
+## TODO
+
+- Implement simple logging onto the TFT (need to handle overflowing text with println, e.g. calculate how many lines with in certain orientation and keep a few line buffers)
+- Handle different REST requests to do certain stuff (enabled/disable TFT using POST and DELETE, etc.)
