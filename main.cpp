@@ -11,11 +11,8 @@ void loop()
 #include <functional>
 
 #include <Arduino.h>
-#include <EEPROM.h>
 #include <ESPmDNS.h>
 #include <FastLED.h>
-#include <OneButton.h>
-#include <TFT_eSPI.h>
 #include <USB.h>
 #include <USBHIDKeyboard.h>
 #include <WebServer.h>
@@ -31,14 +28,11 @@ void loop()
 #define NUM_LEDS 1
 #define BAUD_RATE 9600
 #define HTTP_PORT 80
-#define DOMAIN_NAME "wake-on-esp32s3"
+#define DOMAIN_NAME "esp32"
 
 CRGB leds[NUM_LEDS];
 USBHIDKeyboard Keyboard;
 WebServer server(HTTP_PORT);
-TFT_eSPI tft = TFT_eSPI();
-uint8_t tftRotation = 0;
-OneButton button(BTN_PIN, true);
 
 void withLed(CRGB::HTMLColorCode color, std::function<void()> fn)
 {
@@ -60,41 +54,16 @@ void withSerial(std::function<void()> fn)
 template <typename T> void xPrint(const T &s)
 {
     Serial.print(s);
-    tft.print(s);
 }
 
 template <typename T> void xPrintln(const T &s)
 {
     Serial.println(s);
-    tft.println(s);
-}
-
-void configureTft()
-{
-    tft.setRotation(tftRotation);
-    tft.setCursor(0, 0, 2);
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setTextSize(1);
-}
-
-void rotateTft()
-{
-    tftRotation = (tft.getRotation() + 1) % 4;
-    withLed(CRGB::Pink, []() {
-        EEPROM.write(0, tftRotation);
-        EEPROM.commit();
-    });
-    configureTft();
 }
 
 void setup()
 {
     delay(WAIT_HUGE);
-    withSerial([]() {
-        xPrint("c++: ");
-        xPrintln(__cplusplus);
-    });
     server.on("/", HTTP_GET, []() {
         withLed(CRGB::Blue, []() {
             withSerial([]() { xPrintln("got message"); });
@@ -105,34 +74,6 @@ void setup()
         });
         server.send(200);
     });
-    button.attachDuringLongPress([] {
-        withLed(CRGB::Purple, []() {
-            withSerial([]() {
-                xPrintln("button long pressed");
-                xPrintln("restarting esp");
-                delay(WAIT_HUGE);
-                ESP.restart();
-            });
-        });
-    });
-    button.attachDoubleClick([] {
-        withLed(CRGB::Yellow, []() {
-            withSerial([]() {
-                xPrintln("button double clicked");
-                xPrintln("rotating tft");
-                delay(WAIT_HUGE);
-                rotateTft();
-                xPrintln("rotated tft");
-            });
-        });
-    });
-    withLed(CRGB::Pink, []() {
-        EEPROM.begin(sizeof(uint8_t));
-        tftRotation = EEPROM.read(0);
-    });
-    tft.init();
-    tft.setRotation(tftRotation);
-    configureTft();
     USB.begin();
     FastLED.clear();
     FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, NUM_LEDS);
@@ -186,7 +127,6 @@ void setup()
 
 void loop()
 {
-    button.tick();
     server.handleClient();
     delay(WAIT_TINY);
 }

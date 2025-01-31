@@ -1,5 +1,11 @@
 # About
 
+**Note**: to run `pio` from the command-line in VS Code run the _Open PlatformIO Core CLI_ command from the command pallette.
+
+```
+pio run
+```
+
 ESP32S3 module that acts as a webserver and keyboard.
 Whenever someone sends an HTTP request to the server it'll emulate an F24 keypress.
 Used to wake up a laptop which doesn't respond to Wake-on-LAN and out of reach by other wireless means (e.g. like a 2.4 GHz wireless mouse or similar).
