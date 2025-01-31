@@ -1,7 +1,7 @@
 # About
 
 ESP32S3 module that acts as a webserver and keyboard.
-Whenever someone sends an HTTP request to the server it'll emulate a F24 keypress.
+Whenever someone sends an HTTP request to the server it'll emulate an F24 keypress.
 Used to wake up a laptop which doesn't respond to Wake-on-LAN and out of reach by other wireless means (e.g. like a 2.4 GHz wireless mouse or similar).
 
 - Written for [LILYGO T-Dongle-S3](https://www.lilygo.cc/products/t-dongle-s3)
