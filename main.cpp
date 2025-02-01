@@ -28,7 +28,7 @@ void loop()
 #define NUM_LEDS 1
 #define BAUD_RATE 9600
 #define HTTP_PORT 80
-#define DOMAIN_NAME "esp32"
+#define DOMAIN_NAME "wake-on-esp32s3"
 
 CRGB leds[NUM_LEDS];
 USBHIDKeyboard Keyboard;
