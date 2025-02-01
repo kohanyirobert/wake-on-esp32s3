@@ -64,9 +64,16 @@ template <typename T> void xPrintln(const T &s)
 void setup()
 {
     delay(WAIT_HUGE);
+    withSerial([]() {
+        xPrint("starting at ");
+        xPrintln(WiFi.macAddress());
+    });
     server.on("/", HTTP_GET, []() {
         withLed(CRGB::Blue, []() {
-            withSerial([]() { xPrintln("got message"); });
+            withSerial([]() {
+                xPrint("wake up from "); 
+                xPrintln(server.client().remoteIP());
+            });
             Keyboard.begin();
             Keyboard.press(KEY_F24);
             Keyboard.release(KEY_F24);
