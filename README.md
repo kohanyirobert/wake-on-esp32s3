@@ -37,3 +37,4 @@ I've tested this on a Samsung A52s 5G with Android 12 (latest updates as far as 
 
 - Implement simple logging onto the TFT (need to handle overflowing text with println, e.g. calculate how many lines with in certain orientation and keep a few line buffers)
 - Handle different REST requests to do certain stuff (enabled/disable TFT using POST and DELETE, etc.)
+- Print MAC address or IP to TFT (since `.local` might not work)
