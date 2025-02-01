@@ -29,12 +29,19 @@ I've tested this on a Samsung A52s 5G with Android 12 (latest updates as far as 
     - Run `dumpsys connectivity | grep -i dns`
     - Give the output to some AI chat model to format and analyze and see what's in there
     - Re-run it after switching private DNS settings
+- Could also prove useful to check these
+    - `settings list global | grep -i dns`
+    - `dumpsys connectivity | grep -i dns | grep 'WIFI CONNECTED'`
+    - `dumpsys connectivity | grep -i dns | grep 'WIFI CONNECTED' | grep -o 'DnsAddresses.*Domains'`
 - Using something like Termux to see DNS settings might prove useless, since they might use custom DNS resolver settings
 - Although, in theory it should not matter since `.local` resolving should bypass DNS servers (to my understanding)
 - Finally, check your browser whether it can resolve `http://wake-on-esp32s3.local`
+
+Note: written about my experiences regarding this [here](https://stackoverflow.com/questions/79405699/android-doesnt-resolve-mdns-address-in-local-network-but-does-so-in-another).
 
 ## TODO
 
 - Implement simple logging onto the TFT (need to handle overflowing text with println, e.g. calculate how many lines with in certain orientation and keep a few line buffers)
 - Handle different REST requests to do certain stuff (enabled/disable TFT using POST and DELETE, etc.)
 - Print MAC address or IP to TFT (since `.local` might not work)
+- Maybe listen to a multicast message to wake up on instead of HTTP
