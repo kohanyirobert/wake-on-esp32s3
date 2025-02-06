@@ -108,7 +108,7 @@ void setup()
                         xPrintln("couldn't set up mDNS");
                     }
                 });
-                MDNS.addService("http", "tcp", HTTP_PORT);
+                MDNS.addService(DOMAIN_NAME, "tcp", HTTP_PORT);
             });
             delay(WAIT_NORMAL);
             break;
